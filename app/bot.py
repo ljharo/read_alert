@@ -53,45 +53,45 @@ async def manejar_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     with Session() as session:
 
-    # 1. Selección de Modo
-    if data == "set_modo_fijo":
-        context.user_data['temp_modo'] = 'fijo'
-        await query.edit_message_text(
-            "Has elegido **Modo Fijo**. Selecciona la hora de tu reeducación diaria:",
-            reply_markup=generar_teclado_horas(),
-            parse_mode='Markdown'
-        )
+        # 1. Selección de Modo
+        if data == "set_modo_fijo":
+            context.user_data['temp_modo'] = 'fijo'
+            await query.edit_message_text(
+                "Has elegido **Modo Fijo**. Selecciona la hora de tu reeducación diaria:",
+                reply_markup=generar_teclado_horas(),
+                parse_mode='Markdown'
+            )
 
-    elif data == "set_modo_flexible":
-        # Limpiar vigilancia antigua antes de cambiar modo
-        limpiar_todos_los_jobs(user_id, context)
-        
-        user = session.query(User).filter_by(user_id=user_id).first()
-        if not user:
-            user = User(user_id=user_id)
-            session.add(user) # CORREGIDO: antes decía session.add(User)
-        
-        user.modo = 'flexible'
-        user.hora_fija = None # Limpiamos la fija si existía
-        session.commit()
-        
-        # Programar consulta diaria (8:00 AM)
-        context.job_queue.run_daily(
-            consulta_matutina, 
-            time=time(8, 0), 
-            chat_id=user_id,
-            name=f"morning_{user_id}"
-        )
-        
-        await query.edit_message_text(
-            "**Modo Flexible activado.**\nLa Telepantalla te interrogará cada mañana. Selecciona tu hora para **HOY**:",
-            reply_markup=generar_teclado_horas(),
-            parse_mode='Markdown'
-        )
+        elif data == "set_modo_flexible":
+            # Limpiar vigilancia antigua antes de cambiar modo
+            limpiar_todos_los_jobs(user_id, context)
+            
+            user = session.query(User).filter_by(user_id=user_id).first()
+            if not user:
+                user = User(user_id=user_id)
+                session.add(user) # CORREGIDO: antes decía session.add(User)
+            
+            user.modo = 'flexible'
+            user.hora_fija = None # Limpiamos la fija si existía
+            session.commit()
+            
+            # Programar consulta diaria (8:00 AM)
+            context.job_queue.run_daily(
+                consulta_matutina, 
+                time=time(8, 0), 
+                chat_id=user_id,
+                name=f"morning_{user_id}"
+            )
+            
+            await query.edit_message_text(
+                "**Modo Flexible activado.**\nLa Telepantalla te interrogará cada mañana. Selecciona tu hora para **HOY**:",
+                reply_markup=generar_teclado_horas(),
+                parse_mode='Markdown'
+            )
 
-    # 2. Selección de Hora
-    elif data.startswith("hora_"):
-        hora_elegida = data.split("_")[1]
+        # 2. Selección de Hora
+        elif data.startswith("hora_"):
+            hora_elegida = data.split("_")[1]
         h, m = map(int, hora_elegida.split(':'))
         
         user = session.query(User).filter_by(user_id=user_id).first()
@@ -121,7 +121,6 @@ async def manejar_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             context.job_queue.run_once(alarma_lectura, when=time(h, m), chat_id=user_id)
             await query.edit_message_text(f"✅ Horario para hoy registrado: {hora_elegida}. No falles al Partido.")
     
-
 
 # --- FUNCIONES DE APOYO ---
 

@@ -1,7 +1,7 @@
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 
 from app.bot import start, manejar_callback
-from app.constans import TELEGRAM_BOT_NAME, TELEGRAM_TOKEN
+from app.constans import TELEGRAM_TOKEN
 
 
 
