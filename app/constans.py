@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# database 
+# database
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 # telegram
