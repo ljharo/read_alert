@@ -9,3 +9,4 @@ MarkupSafe==3.0.3
 Jinja2==3.1.6
 typing_extensions==4.15.0
 annotated-types==0.7.0
+APScheduler==4.0.0
