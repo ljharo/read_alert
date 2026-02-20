@@ -35,7 +35,7 @@ async def post_init(application):
                 consulta_matutina, 
                 time=time(8, 0), # 8 AM por defecto
                 chat_id=user.user_id,
-                name=f"morning_{user_id}"
+                name=f"morning_{user.user_id}"
             )
             
     session.close()

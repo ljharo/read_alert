@@ -52,7 +52,6 @@ async def manejar_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
 
     with Session() as session:
-
         # 1. Selección de Modo
         if data == "set_modo_fijo":
             context.user_data['temp_modo'] = 'fijo'
@@ -63,19 +62,17 @@ async def manejar_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
         elif data == "set_modo_flexible":
-            # Limpiar vigilancia antigua antes de cambiar modo
             limpiar_todos_los_jobs(user_id, context)
             
             user = session.query(User).filter_by(user_id=user_id).first()
             if not user:
                 user = User(user_id=user_id)
-                session.add(user) # CORREGIDO: antes decía session.add(User)
+                session.add(user)
             
             user.modo = 'flexible'
-            user.hora_fija = None # Limpiamos la fija si existía
+            user.hora_fija = None
             session.commit()
             
-            # Programar consulta diaria (8:00 AM)
             context.job_queue.run_daily(
                 consulta_matutina, 
                 time=time(8, 0), 
@@ -84,42 +81,42 @@ async def manejar_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             
             await query.edit_message_text(
-                "**Modo Flexible activado.**\nLa Telepantalla te interrogará cada mañana. Selecciona tu hora para **HOY**:",
+                "**Modo Flexible activado.**\nLa Telepantalla te preguntará cada mañana. Selecciona tu hora para **HOY**:",
                 reply_markup=generar_teclado_horas(),
                 parse_mode='Markdown'
             )
 
-        # 2. Selección de Hora
+        # 2. Selección de Hora (TODO este bloque debe estar indentado)
         elif data.startswith("hora_"):
             hora_elegida = data.split("_")[1]
-        h, m = map(int, hora_elegida.split(':'))
-        
-        user = session.query(User).filter_by(user_id=user_id).first()
-        if not user:
-            user = User(user_id=user_id)
-            session.add(user)
+            h, m = map(int, hora_elegida.split(':')) # Ahora esto solo corre si hay una hora
+            
+            user = session.query(User).filter_by(user_id=user_id).first()
+            if not user:
+                user = User(user_id=user_id)
+                session.add(user)
 
-        if context.user_data.get('temp_modo') == 'fijo':
-            limpiar_todos_los_jobs(user_id, context) # Evitar duplicados
+            if context.user_data.get('temp_modo') == 'fijo':
+                limpiar_todos_los_jobs(user_id, context)
+                
+                user.modo = 'fijo'
+                user.hora_fija = hora_elegida
+                session.commit()
+                
+                context.job_queue.run_daily(
+                    alarma_lectura, 
+                    time=time(h, m), 
+                    chat_id=user_id, 
+                    name=f"fijo_{user_id}"
+                )
+                
+                await query.edit_message_text(f"✅ Disciplina fija establecida: {hora_elegida}. El Gran Hermano vigila.")
+                context.user_data['temp_modo'] = None
             
-            user.modo = 'fijo'
-            user.hora_fija = hora_elegida
-            session.commit()
-            
-            context.job_queue.run_daily(
-                alarma_lectura, 
-                time=time(h, m), 
-                chat_id=user_id, 
-                name=f"fijo_{user_id}"
-            )
-            
-            await query.edit_message_text(f"✅ Disciplina fija establecida: {hora_elegida}. El Gran Hermano vigila.")
-            context.user_data['temp_modo'] = None
-        
-        else:
-            # Modo Flexible: Alarma de un solo uso para hoy
-            context.job_queue.run_once(alarma_lectura, when=time(h, m), chat_id=user_id)
-            await query.edit_message_text(f"✅ Horario para hoy registrado: {hora_elegida}. No falles al Partido.")
+            else:
+                # Modo Flexible: Alarma de un solo uso para hoy
+                context.job_queue.run_once(alarma_lectura, when=time(h, m), chat_id=user_id)
+                await query.edit_message_text(f"✅ Horario para hoy registrado: {hora_elegida}. No falles al Partido.")
     
 
 # --- FUNCIONES DE APOYO ---
