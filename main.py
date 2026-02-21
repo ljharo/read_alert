@@ -1,7 +1,7 @@
 import pytz
 import logging
 from datetime import time
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, Defaults
 from app.bot import start, manejar_callback, alarma_lectura, consulta_matutina
 from app.constans import TELEGRAM_TOKEN
 from app.database import Session, User
