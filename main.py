@@ -1,6 +1,7 @@
 import pytz
 import logging
 from datetime import time
+from zoneinfo import ZoneInfo
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, Defaults
 from app.bot import start, manejar_callback, alarma_lectura, consulta_matutina
 from app.constans import TELEGRAM_TOKEN
@@ -49,7 +50,7 @@ if __name__ == "__main__":
     if not TELEGRAM_TOKEN:
         raise ValueError("TELEGRAM_TOKEN no detectado.")
 
-    ZONA_HORARIA = pytz.timezone("America/Caracas")
+    ZONA_HORARIA = ZoneInfo("America/Caracas")
     defaults = Defaults(tzinfo=ZONA_HORARIA)
 
     # Usamos post_init para cargar los datos de la DB al arrancar
