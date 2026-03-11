@@ -7,8 +7,7 @@ services:
     # Restart the bot if it fails
     restart: unless-stopped
     volumes:
-      # Mount the database file for persistence
-      - ./big_brother.db:/app/big_brother.db
+      - ./data:/app/data
 
     env_file:
       - .env
